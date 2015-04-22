@@ -14,10 +14,8 @@ import javax.persistence.Table;
 @Table(name = "apn_notification")
 public class Notification implements Serializable {
 
-    /**
-	 * 
-	 */
 	private static final long serialVersionUID = 2209013519421434132L;
+	
 	@Id
     @GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
@@ -31,6 +29,11 @@ public class Notification implements Serializable {
 	private String message;
     @Column(name = "uri", nullable = true,length = 256)
     private String uri;
+    
+    @Column(name = "uuid", nullable = false,length = 256 , unique=true)
+    private String uuid;
+    
+    
 	@Column(name = "created_date", updatable = false)
 	private Date createdDate = new Date();
 	
@@ -75,6 +78,18 @@ public class Notification implements Serializable {
 	}
 	public void setCreatedDate(Date createdDate) {
 		this.createdDate = createdDate;
+	}
+	/**
+	 * @return the uuid
+	 */
+	public String getUuid() {
+		return uuid;
+	}
+	/**
+	 * @param uuid the uuid to set
+	 */
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
 	}
 	
 	

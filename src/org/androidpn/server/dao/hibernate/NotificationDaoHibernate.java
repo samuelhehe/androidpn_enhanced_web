@@ -57,5 +57,12 @@ public class NotificationDaoHibernate extends HibernateDaoSupport implements Not
 		return getHibernateTemplate().find("from Notification n where n.createdDate >= ? order by n.createdDate desc",createDate);
 	}
 
+	public void removeNotificationByUUID(String uuid) {
+		Notification notification = (Notification) getHibernateTemplate().find("from Notification where uuid=?",uuid);
+		if (notification != null ) {
+			removeNotification(notification);
+		}
+	}
+
 
 }

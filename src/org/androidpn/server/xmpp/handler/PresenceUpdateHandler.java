@@ -17,6 +17,13 @@
  */
 package org.androidpn.server.xmpp.handler;
 
+import java.util.List;
+
+import org.androidpn.server.model.Notification;
+import org.androidpn.server.service.NotificationService;
+import org.androidpn.server.service.ServiceLocator;
+import org.androidpn.server.service.UserService;
+import org.androidpn.server.xmpp.push.NotificationManager;
 import org.androidpn.server.xmpp.router.PacketDeliverer;
 import org.androidpn.server.xmpp.session.ClientSession;
 import org.androidpn.server.xmpp.session.Session;
@@ -28,77 +35,99 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.Presence;
 
-/** 
+/**
  * This class is to handle the presence protocol.
  *
  * @author Sehwan Noh (devnoh@gmail.com)
  */
 public class PresenceUpdateHandler {
 
-    protected final Log log = LogFactory.getLog(getClass());
+	protected final Log log = LogFactory.getLog(getClass());
 
-    protected SessionManager sessionManager;
+	protected SessionManager sessionManager;
 
-    /**
-     * Constructor.
-     */
-    public PresenceUpdateHandler() {
-        sessionManager = SessionManager.getInstance();
-    }
+	protected NotificationService notificationService;
 
-    /**
-     * Processes the presence packet.
-     * 
-     * @param packet the packet
-     */
-    public void process(Packet packet) {
-        ClientSession session = sessionManager.getSession(packet.getFrom());
 
-        try {
-            Presence presence = (Presence) packet;
-            Presence.Type type = presence.getType();
+	private NotificationManager notificationManager;
 
-            if (type == null) { // null == available
-                if (session != null
-                        && session.getStatus() == Session.STATUS_CLOSED) {
-                    log.warn("Rejected available presence: " + presence + " - "
-                            + session);
-                    return;
-                }
+	/**
+	 * Constructor.
+	 */
+	public PresenceUpdateHandler() {
+		sessionManager = SessionManager.getInstance();
+		notificationService = ServiceLocator.getNotificationService();
+		notificationManager = new NotificationManager();
+	}
 
-                if (session != null) {
-                    session.setPresence(presence);
-                    if (!session.isInitialized()) {
-                        // initSession(session);
-                        session.setInitialized(true);
-                    }
-                }
+	/**
+	 * Processes the presence packet.
+	 * 
+	 * @param packet
+	 *            the packet
+	 */
+	public void process(Packet packet) {
+		ClientSession session = sessionManager.getSession(packet.getFrom());
 
-            } else if (Presence.Type.unavailable == type) {
+		try {
+			Presence presence = (Presence) packet;
+			Presence.Type type = presence.getType();
 
-                if (session != null) {
-                    session.setPresence(presence);
-                }
+			if (type == null) { // null == available
+				if (session != null
+						&& session.getStatus() == Session.STATUS_CLOSED) {
+					log.warn("Rejected available presence: " + presence + " - "
+							+ session);
+					return;
+				}
 
-            } else {
-                presence = presence.createCopy();
-                if (session != null) {
-                    presence.setFrom(new JID(null, session.getServerName(),
-                            null, true));
-                    presence.setTo(session.getAddress());
-                } else {
-                    JID sender = presence.getFrom();
-                    presence.setFrom(presence.getTo());
-                    presence.setTo(sender);
-                }
-                presence.setError(PacketError.Condition.bad_request);
-                PacketDeliverer.deliver(presence);
-            }
+				if (session != null) {
+					session.setPresence(presence);
+					if (!session.isInitialized()) {
+						// initSession(session);
+						session.setInitialized(true);
+					}
+					/// when client is connected  , send all offline msg to client
+					List<Notification> list = notificationService
+							.getNotificationsByUsername(session.getUsername());
+					if (list != null && list.size() > 0) {
+						for (Notification notification : list) {
+							String apiKey = notification.getApiKey();
+							String message = notification.getMessage();
+							String title = notification.getTitle();
+							String uri = notification.getUri();
+							String username = notification.getUsername();
+							notificationManager.sendNotifcationToUser(apiKey, username, title, message, uri);
+							notificationService.removeNotification(notification);
+						}
+					}
+				}
 
-        } catch (Exception e) {
-            log.error("Internal server error. Triggered by packet: " + packet,
-                    e);
-        }
-    }
+			} else if (Presence.Type.unavailable == type) {
+
+				if (session != null) {
+					session.setPresence(presence);
+				}
+
+			} else {
+				presence = presence.createCopy();
+				if (session != null) {
+					presence.setFrom(new JID(null, session.getServerName(),
+							null, true));
+					presence.setTo(session.getAddress());
+				} else {
+					JID sender = presence.getFrom();
+					presence.setFrom(presence.getTo());
+					presence.setTo(sender);
+				}
+				presence.setError(PacketError.Condition.bad_request);
+				PacketDeliverer.deliver(presence);
+			}
+
+		} catch (Exception e) {
+			log.error("Internal server error. Triggered by packet: " + packet,
+					e);
+		}
+	}
 
 }
