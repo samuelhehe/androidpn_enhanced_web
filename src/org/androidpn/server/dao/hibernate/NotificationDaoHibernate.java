@@ -42,7 +42,9 @@ public class NotificationDaoHibernate extends HibernateDaoSupport implements Not
 			throws NotificationNotFoundException {
 		List<Notification> notifications = getHibernateTemplate().find("from Notification where username=?",username);
 		if (notifications == null || notifications.isEmpty()) {
-			throw new NotificationNotFoundException("Notification '" + username + "' not found");
+//			throw new NotificationNotFoundException("Notification '" + username + "' not found");
+			System.out.println("has no any notification send to username: "+ username);
+			return null;
 		} else {
 			return notifications;
 		}

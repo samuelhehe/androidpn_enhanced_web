@@ -82,4 +82,11 @@ public class NotificationServiceImpl implements NotificationService {
 		this.notificationDao = notificationDao;
 	}
 
+	/**
+	 * @param uuid  
+	 */
+	public void removeNotificationByUUID(String uuid) {
+		notificationDao.removeNotificationByUUID(uuid);		
+	}
+
 }

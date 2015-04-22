@@ -11,7 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "apn_notification")
+@Table(name = "apn_notification")  
 public class Notification implements Serializable {
 
 	private static final long serialVersionUID = 2209013519421434132L;
@@ -29,8 +29,7 @@ public class Notification implements Serializable {
 	private String message;
     @Column(name = "uri", nullable = true,length = 256)
     private String uri;
-    
-    @Column(name = "uuid", nullable = false,length = 256 , unique=true)
+    @Column(name = "uuid", nullable = false,length = 128 , unique=true)
     private String uuid;
     
     

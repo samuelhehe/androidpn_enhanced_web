@@ -17,5 +17,7 @@ public interface NotificationService {
 	public void removeNotification(Notification notification);
 
 	public List<Notification> getNotificationsFromCreatedDate(Date createDate);
+	
+	public void removeNotificationByUUID(String uuid);
 
 }
